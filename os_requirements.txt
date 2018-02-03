@@ -1,0 +1,7 @@
+For pyzbar to work we need Pillows and at the os leveL:
+
+OS X:
+    brew install zbar
+
+Ubuntu:
+    sudo apt-get install libzbar0 

@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>qr2tx?job</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="bb" content="Eth Tx From QR">
+    <link rel="icon" href="favicon/favicon.ico">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+
+    <style>
+        /* Sticky footer */
+        html {
+        position: relative;
+        min-height: 100%;
+        }
+        body {
+        /* Margin bottom by footer height */
+        margin-bottom: 60px;
+        }
+        .footer {
+        font-size: 75%;
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        /* Set the fixed height of the footer here */
+        height: 60px;
+        line-height: 60px; /* Vertically center the text there */
+        background-color: #f5f5f5;
+        }
+
+        body > .container {
+        padding: 60px 15px 0;
+        /* font-size: 95%; */
+        }
+
+        .footer > .container {
+        padding-right: 15px;
+        padding-left: 15px;
+        }
+
+        section {
+            font-size: 80%;
+        }
+
+        .scrollerClass {
+            height:200px;
+            overflow-y: scroll;
+        }
+
+    </style>
+  </head>
+  <body>
+
+    <header>
+      <!-- Fixed navbar -->
+      <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+        <a class="navbar-brand" href="">
+            <img src="images/ethereum.png" class="img-thumb" alt="" style="max-width:12.5%;">
+            &nbsp;TX FROM QR
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      </nav>
+    </header>
+
+    <main role="main" class="container">
+
+        <section id="welcome-section">
+            <div class="row mt-5 mb-1 justify-content-center">
+                <h5>ETH Tx Viewer for Signed Transaction  ... by way of QR</h5>
+            </div>
+        </section>
+
+        <section id="login-section" hidden>
+            <div class="row mt-5 mb-1 justify-content-center">
+                <form class="form-inline" id="login-form">
+                    <div class="form-group">
+                        <input type="text" name="uname" value="bossman" placeholder="default" hidden>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" name="passwd" placeholder="   enter your password" required>
+                    </div>
+                    &nbsp;&nbsp;&nbsp;
+                    <button type="submit" class="btn btn-sm btn-primary" id="login-button">Login</button>
+                </form>
+            </div>
+            <div class="row mt-1 justify-content-center" id="login-form-err" style="color:red;">
+                error
+            </div>
+        </section>
+
+        <section id="results-section">
+            <div class="row mt-5 mb-1">
+                <div class="col-md-4 text-center">
+                    <img src="images/example_qr.png" class="img" alt="QR png" style="max-width:50%;">
+                </div>
+                <div class="col-md-6">
+                    <br>
+                    <br>
+                    <h6>Signed Transaction from QR:</h6>
+                    <b><i><span id="raw-qr-str" style="font-size:85%;">${QRSTR}</span></b></i>
+                </div>
+            </div>
+            <div class="row mt-5 mb-2" id="tx-row-1">
+                <div class="col-md-3 text-center">
+                    <h6>Result:</h6>
+                </div>
+            </div>
+            ${TXVIEWCOLS}
+        </section>
+
+        <section id="bottom-section">
+            <div class="row mt-5 mb-1"></div>
+        </section>
+
+    </main>
+
+    <footer class="footer mt-2">
+      <div class="container">
+          <div class="row">
+              <span class="text-muted">&copy; <span id="currentyear">2018</span>  morecowbell surprises</span>
+          </div>
+      </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-serialize-object/2.5.0/jquery.serialize-object.min.js"></script>
+
+    <script>
+        $(function () {
+            thisyear = new Date().getFullYear();
+            $('#currentyear').text(thisyear);
+        });
+
+        var login_url = "${LOGINURL}",
+            acct_nsetter_url = "${ACCTSETTRURL}";
+
+        function liljaxer(url,payload,req_meth) {
+            return $.ajax({
+                url: url,
+                method: req_meth,
+                dataType: 'json',
+                contentType:"application/json",
+                data: payload
+            })
+            .fail(function(xhr,status,message) {
+                console.log('jajax failure: ',xhr.readyState,status,message,xhr);
+                if (xhr.readyState==0) {
+                    console.log('Connection error. wanna plug in .. ?');
+                }
+                else {
+                    alert('boo yah. i suck.  something borked in ajax call: ' + xhr.status + ' :  ' + message);
+                }
+            })
+        }
+
+        function jlogin(url,payload) {
+            $("#login-form-err").text();
+            jaxer = liljaxer(url,payload,"post");
+            jaxer.done(function(result) {
+                if (result['app-code']==200) {
+                    // that should not have happened
+                    console.log("200 response after login should not have happened. expted server-side redirect!!", result);
+                    location.reload();
+                }
+                else {
+                    $('#login-form').trigger("reset");
+                    $("#login-form-err").text(result['err-msg']);
+                }
+            })
+        }
+
+        function jnameSetter(url,payload,req_meth) {
+            $("#acct-setter-err").prop('hidden', true);
+            jaxer = liljaxer(url,payload,req_meth);
+            jaxer.done(function(result) {
+                console.log(result);
+                if (result['app-code']==200) {
+                    console.log('name setter: ', result);
+                }
+                else {
+                    var msg = 'ouch. that didn\'t work. mea culpa. ' + result['err-msg'];
+                    $("#acct-setter-err").text(msg).prop('hidden', false);
+                }
+            })
+
+        }
+
+        function jtickerGetter() {
+            url = 'https://api.coinmarketcap.com/v1/ticker/ethereum/';
+            alert(url);
+            $.ajax({
+                url: url,
+                method: "get",
+                dataType: 'pjson',
+                contentType:"application/json",
+            })
+            .done(function(result) {
+                    console.log(result)
+            })
+            .fail(function(xhr,status,message) {
+                console.log('jajax failure: ',xhr.readyState,status,message,xhr);
+                if (xhr.readyState==0) {
+                    console.log('Connection error. wanna plug in .. ?');
+                }
+                else {
+                    alert('boo yah. i suck.  something borked in ajax call: ' + xhr.status + ' :  ' + message);
+                }
+            })
+        }
+
+        $("body").on("submit","#login-form", function(e) {
+            e.preventDefault();
+            console.log(JSON.stringify($(this).serialize()));
+        })
+
+        $("body").on("change","#acct-name-id", function(e) {
+            // little lame and really just for one user, one results row i'm not even checking for uniqueness
+            var $this = $(this),
+                input_val = $this.val(),
+                payload = JSON.stringify({"acct-name":input_val});
+
+            // if (input_val.length < 2) {
+            // if i do that, i need a clear/reset button and quite have the time for that
+            if (input_val.length > 50 ) {
+                msg = 'nickname must be at most 50 characters.'
+                $("#acct-setter-err").text(msg).prop('hidden', false);
+
+            }
+            else {
+                jnameSetter(acct_nsetter_url,payload,"post");
+            }
+        })
+
+        $("#acct-setter-err").prop('hidden', true);
+        $(document).ready(function(){
+
+        });
+
+    </script>
+  </body>
+</html>

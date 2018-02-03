@@ -1,0 +1,7 @@
+*.bak
+*.cfg
+*.pid
+sessions/
+config/
+logs/
+
