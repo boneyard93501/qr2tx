@@ -14,6 +14,7 @@
 
     v 0.0.1, 02-02-2018
 '''
+from __future__ import print_function
 import os, sys
 import pickle as pickle
 from string import Template
@@ -309,7 +310,7 @@ def tx_row_maker(tx_data,acct_nick_name):
                 __ = round(eth_usd * float(eth),10)
                 usd = f'USD:&nbsp;{__:.10f}'
             e_str = f'<span style="font-size:85%;">&nbsp;&nbsp;(ETH &nbsp;{eth:.16f},&nbsp;{usd})</span>'
-            print(nt.key,eth,e_str)
+
         c = col.format(nt.key + i_str,nt.value or '',(nt.unit or '') + e_str)
         r = row.format(f'{nt.key}-result-row',c)
         s += r
